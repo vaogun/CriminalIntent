@@ -19,6 +19,9 @@ import android.widget.TextView;
  * A simple {@link Fragment} subclass.
  */
 public class CrimeFragment extends Fragment {
+    public static final String EXTRA_CRIME_ID =
+            "com.vaojr.android.criminalintent.crime_id";
+
     private Crime mCrime;
     private EditText mTitleField;
     private Button mDateButton;
