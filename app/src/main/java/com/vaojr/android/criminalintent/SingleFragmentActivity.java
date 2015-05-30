@@ -1,6 +1,7 @@
 package com.vaojr.android.criminalintent;
 
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -24,5 +25,4 @@ public abstract class SingleFragmentActivity extends Activity {
                     .commit();
         }
     }
-
 }
