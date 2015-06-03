@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -22,6 +23,7 @@ public class CrimeListFragment extends ListFragment {
     private static final String TAG = "CrimeListFragment";
     private boolean mSubtitleVisibile;
     private ArrayList<Crime> mCrimes;
+    private Button newCrimeButton;
 
     private class CrimeAdapter extends ArrayAdapter<Crime> {
         public CrimeAdapter(ArrayList<Crime> crimes) {
@@ -71,7 +73,19 @@ public class CrimeListFragment extends ListFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View v = super.onCreateView(inflater, container, savedInstanceState);
+        View v = inflater.inflate(R.layout.fragment_list_crime, container, false);
+
+        newCrimeButton = (Button)v.findViewById(R.id.newCrimeButton);
+        newCrimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Crime crime = new Crime();
+                CrimeLab.get(getActivity()).addCrime(crime);
+                Intent i = new Intent(getActivity(), CrimePagerActivity.class);
+                i.putExtra(CrimeFragment.EXTRA_CRIME_ID, crime.getId());
+                startActivityForResult(i,0);
+            }
+        });
 
         if (mSubtitleVisibile) {
             getActivity().getActionBar().setSubtitle(R.string.subtitle);
