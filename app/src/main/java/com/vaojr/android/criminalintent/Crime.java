@@ -25,12 +25,19 @@ public class Crime {
         mDate = new Date();
     }
 
+    public Crime(JSONObject json) throws JSONException {
+        mId = UUID.fromString(json.getString(JSON_ID));
+        mTitle = json.getString(JSON_TITLE);
+        mDate = new Date(json.getLong(JSON_DATE));
+        mSolved = json.getBoolean(JSON_SOLVED);
+    }
+
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
         json.put(JSON_ID, mId);
         json.put(JSON_TITLE, mTitle);
         json.put(JSON_SOLVED, mSolved);
-        json.put(JSON_DATE, mDate);
+        json.put(JSON_DATE, mDate.getTime());
         return json;
     }
 
