@@ -27,7 +27,7 @@ public class CriminalIntentJSONSerializer {
         for (Crime c : crimes)
             array.put(c.toJSON());
 
-        // Write thr file to disk
+        // Write the file to disk
         Writer writer = null;
         try {
             OutputStream out = mContext
