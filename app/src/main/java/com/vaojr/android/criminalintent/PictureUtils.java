@@ -3,13 +3,13 @@ package com.vaojr.android.criminalintent;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.Display;
 import android.widget.ImageView;
 
-/**
- * Created by him on 6/8/15.
- */
+import java.io.ByteArrayOutputStream;
+
 public class PictureUtils {
     /**
      * Get a BitmapDrawable from a local file that is scaled down
@@ -53,5 +53,41 @@ public class PictureUtils {
         BitmapDrawable b = (BitmapDrawable)imageView.getDrawable();
         b.getBitmap().recycle();
         imageView.setImageDrawable(null);
+    }
+
+    public static byte[] rotatePicture(byte[] data, CrimeCameraFragment.Orientation orientation) {
+
+        // set options, in case of OutOfMemoryError
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        // Why 5?
+        options.inSampleSize = 5;
+
+        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0,data.length, options);
+
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        Matrix matrix = new Matrix();
+
+        switch (orientation) {
+            case ORIENTATION_PORTRAIT_NORMAL:
+                matrix.postRotate(90);
+                break;
+            case ORIENTATION_PORTRAIT_INVERTED:
+                matrix.postRotate(270);
+                break;
+            case ORIENTATION_LANDSCAPE_NORMAL:
+                matrix.postRotate(0);
+                break;
+            case ORIENTATION_LANDSCAPE_INVERTED:
+                matrix.postRotate(180);
+                break;
+        }
+
+        Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+
+        return out.toByteArray();
     }
 }
