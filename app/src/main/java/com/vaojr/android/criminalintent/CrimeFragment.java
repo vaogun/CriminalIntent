@@ -13,7 +13,10 @@ import android.support.v4.app.NavUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +27,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
+import java.io.File;
 import java.util.Date;
 import java.util.UUID;
 
@@ -150,6 +154,47 @@ public class CrimeFragment extends Fragment {
             }
         });
 
+        final ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
+
+            @Override
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                MenuInflater inflater = mode.getMenuInflater();
+                inflater.inflate(R.menu.fragment_crime, menu);
+                return true;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                return false;
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.menu_item_delete_photo:
+                        deletePhoto();
+                        mode.finish();
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {
+
+            }
+        };
+
+        mPhotoView.setLongClickable(true);
+        mPhotoView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                getActivity().startActionMode(actionModeCallback);
+                return true;
+            }
+        });
+
         // If camera is not available, disable camera functionality
         PackageManager pm = getActivity().getPackageManager();
         boolean hasACamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)
@@ -171,6 +216,18 @@ public class CrimeFragment extends Fragment {
             b = PictureUtils.getScaledDrawable(getActivity(),path);
         }
         mPhotoView.setImageDrawable(b);
+    }
+
+    private void deletePhoto() {
+        if (mCrime.getPhoto() != null) {
+            String path = getActivity().getFileStreamPath(mCrime.getPhoto().getFilename()).getAbsolutePath();
+            File f = new File(path);
+            // TODO: try-catch-finally logic for delete
+            f.delete();
+            mCrime.setPhoto(null);
+            PictureUtils.cleanImageView(mPhotoView);
+            mPhotoView.invalidate();
+        }
     }
 
     @Override
@@ -214,6 +271,8 @@ public class CrimeFragment extends Fragment {
             mCrime.setDate(date);
             updateDate();
         } else if (requestCode == REQUEST_PHOTO) {
+            // Delete cu
+            deletePhoto();
             // Create a new Photo object and attach it to the crime
             String filename = data
                     .getStringExtra(CrimeCameraFragment.EXTRA_PHOTO_FILENAME);
