@@ -4,9 +4,12 @@ package com.vaojr.android.criminalintent;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
@@ -41,6 +44,7 @@ public class CrimeFragment extends Fragment {
     private static final String DIALOG_IMAGE = "image";
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_PHOTO = 1;
+    private static final int REQUEST_CONTACT = 2;
 
     private Crime mCrime;
     private EditText mTitleField;
@@ -48,6 +52,7 @@ public class CrimeFragment extends Fragment {
     private CheckBox mSolvedCheckBox;
     private ImageButton mPhotoButton;
     private ImageView mPhotoView;
+    private Button mSuspectButton;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -151,6 +156,34 @@ public class CrimeFragment extends Fragment {
             }
         });
 
+        Button reportButton = (Button)v.findViewById(R.id.crime_reportButton);
+        reportButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_TEXT, getCrimeReport());
+                i.putExtra(Intent.EXTRA_SUBJECT,
+                        getString(R.string.crime_report_suspect));
+                i = Intent.createChooser(i, getString(R.string.send_report));
+                startActivity(i);
+            }
+        });
+
+        mSuspectButton = (Button)v.findViewById(R.id.crime_suspectButton);
+        mSuspectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_PICK,
+                        ContactsContract.Contacts.CONTENT_URI);
+                startActivityForResult(i, REQUEST_CONTACT);
+            }
+        });
+
+        if (mCrime.getSuspect() != null) {
+            mSuspectButton.setText(mCrime.getSuspect());
+        }
+
         // If camera is not available, disable camera functionality
         PackageManager pm = getActivity().getPackageManager();
         boolean hasACamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)
@@ -223,6 +256,31 @@ public class CrimeFragment extends Fragment {
                 mCrime.setPhoto(p);
                 showPhoto();
             }
+        } else if (requestCode == REQUEST_CONTACT){
+            Uri contactUri = data.getData();
+
+            // Specify which fields you want your query to return values for.
+            String[] queryFields = new String[] {
+                    ContactsContract.Contacts.DISPLAY_NAME
+            };
+
+            // Perform your query - the contactUri is like a "where" clause here
+            Cursor c = getActivity().getContentResolver()
+                    .query(contactUri, queryFields, null, null, null);
+
+            // Double check that we actually got results
+            if (c.getCount() == 0) {
+                c.close();
+                return;
+            }
+
+            // Pull out the first column of the first row of data -
+            // that is your suspect's name.
+            c.moveToFirst();
+            String suspect = c.getString(0);
+            mCrime.setSuspect(suspect);
+            mSuspectButton.setText(suspect);
+            c.close();
         }
     }
 
