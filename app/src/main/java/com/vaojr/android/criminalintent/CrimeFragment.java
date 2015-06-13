@@ -45,6 +45,7 @@ public class CrimeFragment extends Fragment {
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_PHOTO = 1;
     private static final int REQUEST_CONTACT = 2;
+    private static final int REQUEST_PHONE_NUMBER = 3;
 
     private Crime mCrime;
     private EditText mTitleField;
@@ -53,6 +54,7 @@ public class CrimeFragment extends Fragment {
     private ImageButton mPhotoButton;
     private ImageView mPhotoView;
     private Button mSuspectButton;
+    private Button mCallSuspectButton;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -180,6 +182,16 @@ public class CrimeFragment extends Fragment {
             }
         });
 
+        mCallSuspectButton = (Button)v.findViewById(R.id.crime_callSuspectButton);
+        mCallSuspectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_PICK,
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
+                startActivityForResult(i, REQUEST_PHONE_NUMBER);
+            }
+        });
+
         if (mCrime.getSuspect() != null) {
             mSuspectButton.setText(mCrime.getSuspect());
         }
@@ -256,7 +268,7 @@ public class CrimeFragment extends Fragment {
                 mCrime.setPhoto(p);
                 showPhoto();
             }
-        } else if (requestCode == REQUEST_CONTACT){
+        } else if (requestCode == REQUEST_CONTACT) {
             Uri contactUri = data.getData();
 
             // Specify which fields you want your query to return values for.
@@ -281,6 +293,34 @@ public class CrimeFragment extends Fragment {
             mCrime.setSuspect(suspect);
             mSuspectButton.setText(suspect);
             c.close();
+        } else if (requestCode == REQUEST_PHONE_NUMBER) {
+            Uri contactUri = data.getData();
+
+            // Specify which fields you want your query to return values for.
+            String[] queryFields = new String[] {
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+            };
+
+            // Perform your query - the contactUri is like a "where" clause here
+            Cursor c = getActivity().getContentResolver()
+                    .query(contactUri, queryFields, null, null, null);
+
+            // Double check that we actually got results
+            if (c.getCount() == 0) {
+                c.close();
+                return;
+            }
+
+            // Pull out the first column of the first row of data -
+            // that is your suspect's number
+            c.moveToFirst();
+            String number = c.getString(0);
+            c.close();
+
+            // Dial number
+            Uri numberUri = Uri.parse("tel:" + number);
+            Intent i = new Intent(Intent.ACTION_DIAL, numberUri);
+            startActivity(i);
         }
     }
 
